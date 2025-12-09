@@ -25,13 +25,13 @@ plt.rcParams['axes.unicode_minus'] = False
 # 1. Data Reading and Label Processing
 # -----------------------------------------------------------------------------
 
-# 请确保路径正确
-root_dir = 'C:\\Users\\HS\\Desktop\\文件夹\\论文数据\\拉曼\\原始拉曼数据_英文名称'
-data_path = "C:\\Users\\HS\\Desktop\\文件夹\\论文数据\\拉曼\\清洗后的拉曼数据\\SERS_Data_10%.xlsx"
+# Please ensure that the path is correct
+root_dir = 'RawRamanData'
+data_path = "SERS_Data_10%.xlsx"
 
-# --- 步骤A: (仅供参考) 读取文件夹下的英文名称并打印 ---
+# --- Step A: (For reference only) Read the English names in the folder and print them ---
 print("="*50)
-print("【参考信息】原始文件夹下的英文文件名称列表：")
+print("[Reference Information] List of English file names in the original folder：")
 if os.path.exists(root_dir):
     raw_files = os.listdir(root_dir)
     english_labels_ref = []
@@ -43,7 +43,7 @@ if os.path.exists(root_dir):
         elif os.path.isdir(os.path.join(root_dir, i)):
             english_labels_ref.append(i)
     
-    # 简单的排序显示
+    # Simple sorting display
     def extract_prefix_num(s):
         match = re.match(r"(\d+)\.", s)
         return int(match.group(1)) if match else 999
@@ -52,28 +52,27 @@ if os.path.exists(root_dir):
     for idx, name in enumerate(english_labels_ref):
         print(f"  {idx+1}. {name}")
 else:
-    print(f"Warning: {root_dir} not found. 无法列出英文参考名称。")
+    print(f"Warning: {root_dir} not found. Unable to list English reference names.")
 print("="*50)
 
 
-# --- 步骤B: 读取Excel数据并清洗 ---
+# --- Step B: Read Excel data and filter it ---
 if not os.path.exists(data_path):
-    raise FileNotFoundError(f"找不到文件: {data_path}")
+    raise FileNotFoundError(f"File not found: {data_path}")
 
-print(f"正在读取数据: {data_path}")
+print(f"Reading data: {data_path}")
 summary = pd.read_excel(data_path)
 melt = pd.melt(summary, id_vars=['potential', 'label', 'category'], value_name='intensity')
 melt.dropna(how='any', inplace=True)
 
-print("开始数据筛选...")
-# 筛选逻辑 (保持不变)
+print("Start data filtering...")
+# Filtering logic
 special_labels = [
     '1.DNA_alkylation-Cyclophosphamide.xlsx', '1.DNA_alkylation-carboplatin.xlsx',
     '6.TopoisomeraseI_inhibition-Irinotecan.xlsx', '6.TopoisomeraseI_inhibition-Topotecan.xlsx',
     '7.HDAC_inhibition-Panobinostat.xlsx'
 ]
 
-# 注意：这里的筛选依赖于 label 列的内容，请确保 Excel 中的 label 列内容符合筛选条件
 mask_special = melt['label'].isin(special_labels) & (melt['potential'] >= 840) & (melt['potential'] <= 901)
 mask_normal = (~melt['label'].isin(special_labels)) & (melt['potential'] >= 840) & (melt['potential'] <= 900)
 mask_common1 = (melt['potential'] >= 1000) & (melt['potential'] <= 1060)
@@ -81,11 +80,11 @@ mask_common2 = (melt['potential'] >= 1100) & (melt['potential'] <= 1180)
 
 dfx = melt[mask_special | mask_normal | mask_common1 | mask_common2].copy()
 dfx.dropna(how='any', inplace=True)
-print(f"筛选完成，数据形状: {dfx.shape}")
+print(f"Filtering completed, data shape: {dfx.shape}")
 
-# --- 步骤C: 直接使用中文标签 ---
+# --- Step C: Directly use Chinese labels ---
 
-# 1. 获取 Excel 中所有的唯一中文标签
+# 1. Retrieve all unique Chinese labels in Excel
 chinese_labels_raw = dfx['label'].unique()
 
 # 2. 定义排序逻辑 (提取 "1.", "2." 等前缀进行排序)
@@ -466,3 +465,4 @@ for group_id in range(1, 10):
         plt.show()
     else:
         plt.close()
+
