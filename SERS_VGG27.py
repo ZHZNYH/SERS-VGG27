@@ -26,7 +26,7 @@ plt.rcParams['axes.unicode_minus'] = False
 # -----------------------------------------------------------------------------
 
 # Please ensure that the path is correct
-root_dir = 'RawRamanData'
+root_dir = 'The folder address of the original Raman data'
 data_path = "SERS_Data_10%.xlsx"
 
 # --- Step A: (For reference only) Read the English names in the folder and print them ---
@@ -66,19 +66,12 @@ melt = pd.melt(summary, id_vars=['potential', 'label', 'category'], value_name='
 melt.dropna(how='any', inplace=True)
 
 print("Start data filtering...")
-# Filtering logic
-special_labels = [
-    '1.DNA_alkylation-Cyclophosphamide.xlsx', '1.DNA_alkylation-carboplatin.xlsx',
-    '6.TopoisomeraseI_inhibition-Irinotecan.xlsx', '6.TopoisomeraseI_inhibition-Topotecan.xlsx',
-    '7.HDAC_inhibition-Panobinostat.xlsx'
-]
 
-mask_special = melt['label'].isin(special_labels) & (melt['potential'] >= 840) & (melt['potential'] <= 901)
-mask_normal = (~melt['label'].isin(special_labels)) & (melt['potential'] >= 840) & (melt['potential'] <= 900)
+mask_normal =  (melt['potential'] >= 840) & (melt['potential'] <= 900)
 mask_common1 = (melt['potential'] >= 1000) & (melt['potential'] <= 1060)
 mask_common2 = (melt['potential'] >= 1100) & (melt['potential'] <= 1180)
 
-dfx = melt[mask_special | mask_normal | mask_common1 | mask_common2].copy()
+dfx = melt[mask_normal | mask_common1 | mask_common2].copy()
 dfx.dropna(how='any', inplace=True)
 print(f"Filtering completed, data shape: {dfx.shape}")
 
