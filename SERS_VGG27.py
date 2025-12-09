@@ -16,7 +16,7 @@ import re
 warnings.filterwarnings('ignore')
 
 # -----------------------------------------------------------------------------
-# 0.Set Matplotlib Chinese font to prevent garbled graphics
+# 0. Set Matplotlib font to prevent garbled graphics (Handling Chinese characters)
 # -----------------------------------------------------------------------------
 plt.rcParams['font.sans-serif'] = ['SimHei', 'Microsoft YaHei', 'Arial Unicode MS', 'sans-serif']
 plt.rcParams['axes.unicode_minus'] = False  
@@ -31,7 +31,7 @@ data_path = "SERS_Data_10%.xlsx"
 
 # --- Step A: (For reference only) Read the English names in the folder and print them ---
 print("="*50)
-print("[Reference Information] List of English file names in the original folder：")
+print("[Reference Information] List of English file names in the original folder:")
 if os.path.exists(root_dir):
     raw_files = os.listdir(root_dir)
     english_labels_ref = []
@@ -82,53 +82,53 @@ dfx = melt[mask_special | mask_normal | mask_common1 | mask_common2].copy()
 dfx.dropna(how='any', inplace=True)
 print(f"Filtering completed, data shape: {dfx.shape}")
 
-# --- Step C: Directly use Chinese labels ---
+# --- Step C: Directly use Chinese labels (or raw labels) ---
 
-# 1. Retrieve all unique Chinese labels in Excel
+# 1. Retrieve all unique labels in Excel
 chinese_labels_raw = dfx['label'].unique()
 
-# 2. 定义排序逻辑 (提取 "1.", "2." 等前缀进行排序)
+# 2. Define sorting logic (extract prefixes like "1.", "2.", etc. for sorting)
 def sort_chinese_label(s):
-    # 将输入转为字符串，防止读取为其他类型
+    # Convert input to string to prevent reading as other types
     s_str = str(s)
     match = re.match(r"(\d+)\.", s_str)
     if match:
         return int(match.group(1))
     else:
-        return 999 # 如果没有数字前缀，排在最后
+        return 999 # If no numeric prefix, place at the end
 
-# 3. 对中文标签进行排序
+# 3. Sort the labels
 sorted_chinese_labels = sorted(chinese_labels_raw, key=sort_chinese_label)
 
-# 4. 建立映射字典 {中文名: ID}
+# 4. Build mapping dictionary {Label Name: ID}
 label_dict = {label: idx for idx, label in enumerate(sorted_chinese_labels)}
 
-# 5. 设置绘图用的目标名称为中文列表
+# 5. Set target names for plotting
 target_names = [str(l) for l in sorted_chinese_labels]
 
-print("\n【确认】最终用于训练和显示的标签（中文）：")
+print("\n[Confirm] Final labels for training and display:")
 for idx, name in enumerate(target_names):
     print(f"  ID {idx}: {name}")
 
-# 处理 category
+# Process category
 category_dict = {cat: index for index, cat in enumerate(dfx['category'].unique())}
 
 dfx['category'] = dfx['category'].map(category_dict)
 dfx['label'] = dfx['label'].map(label_dict)
 
-# 生成数据矩阵
+# Generate data matrix
 def generator_x(df):
     return df[['potential', 'category', 'intensity']].values.T
 
 def generator_y(df):
     return df['label'].values[0]
 
-print("正在生成张量数据...")
+print("Generating tensor data...")
 x = dfx.groupby(['label', 'category', 'variable'], group_keys=False).apply(generator_x)
 y = dfx.groupby(['label', 'category', 'variable'], group_keys=False).apply(generator_y)
 
 # -----------------------------------------------------------------------------
-# [预处理] 数据长度调整至 178
+# [Preprocessing] Adjust data length to 178
 # -----------------------------------------------------------------------------
 def adjust_length(data, target_len=178):
     c, n = data.shape
@@ -144,7 +144,7 @@ def adjust_length(data, target_len=178):
         pad_right = diff - pad_left
         return np.pad(data, ((0, 0), (pad_left, pad_right)), mode='edge')
 
-print(f"正在标准化数据长度至 178 (样本总数: {len(x)})...")
+print(f"Standardizing data length to 178 (Total samples: {len(x)})...")
 X_list = []
 Y_list = []
 
@@ -157,22 +157,22 @@ for i in range(len(x)):
 
 X_raw = np.stack(X_list)
 Y_raw = np.array(Y_list)
-print(f"数据标准化完成。最终输入形状: {X_raw.shape}")
+print(f"Data standardization completed. Final input shape: {X_raw.shape}")
 
-# 设备配置
+# Device configuration
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 print(f"Using equipment: {device}")
 
-# 转换为 Numpy 数组
+# Convert to Numpy array
 X_numpy = np.array(X_raw, dtype=np.float32)
 y_numpy = np.array(Y_raw, dtype=np.int64)
 
-# 转换为 Tensor
+# Convert to Tensor
 X_tensor = torch.tensor(X_numpy, dtype=torch.float32)
 y_tensor = torch.tensor(y_numpy, dtype=torch.long)
 
 # -----------------------------------------------------------------------------
-# 2. 模型定义 (SERS_VGG27) - 保持不变
+# 2. Model Definition (SERS_VGG27) - Keep unchanged
 # -----------------------------------------------------------------------------
 
 class SERS_VGG27(nn.Module):
@@ -297,7 +297,7 @@ class SERS_VGG27(nn.Module):
         return out
 
 # -----------------------------------------------------------------------------
-# 3. 10折交叉验证
+# 3. 10-Fold Cross-Validation
 # -----------------------------------------------------------------------------
 
 def train_model(model, train_loader, criterion, optimizer):
@@ -329,7 +329,7 @@ def evaluate_model(model, test_loader):
             
     return np.array(all_targets), np.array(all_preds), np.array(all_probs)
 
-# 参数设置
+# Parameter settings
 n_splits = 10
 epochs = 200
 batch_size = 128
@@ -381,7 +381,7 @@ for fold, (train_idx, test_idx) in enumerate(skf.split(X_numpy, y_numpy)):
     cv_probs.append(fold_probs)
 
 # -----------------------------------------------------------------------------
-# 4. 结果汇总与可视化
+# 4. Result Summary and Visualization
 # -----------------------------------------------------------------------------
 
 y_true_all = np.concatenate(cv_targets)
@@ -391,17 +391,17 @@ y_score_all = np.concatenate(cv_probs)
 overall_acc = metrics.accuracy_score(y_true_all, y_pred_all)
 print(f"\nOverall Accuracy: {overall_acc*100:.2f}%")
 
-print("\nClassification Report (Chinese Labels):")
-# 直接使用中文 target_names
+print("\nClassification Report:")
+# Use target_names directly
 print(classification_report(y_true_all, y_pred_all, 
                             target_names=target_names, 
                             digits=4,
                             zero_division=0))
 
-# --- 混淆矩阵 ---
-fig, ax = plt.subplots(figsize=[16, 14]) # 稍微调大图片尺寸以容纳中文
+# --- Confusion Matrix ---
+fig, ax = plt.subplots(figsize=[16, 14]) # Increase image size slightly to accommodate labels
 cmd = ConfusionMatrixDisplay.from_predictions(y_true_all, y_pred_all, 
-                                        display_labels=target_names, # 显示中文
+                                        display_labels=target_names, # Display labels
                                         ax=ax, cmap='Blues', 
                                         normalize=None, 
                                         values_format='d')
@@ -410,17 +410,17 @@ ax.grid(False)
 ax.set_title(f"Confusion Matrix (Counts) - Acc: {overall_acc*100:.2f}%", fontsize=16, pad=20)
 ax.set_xlabel("Predicted Label", fontsize=12)
 ax.set_ylabel("True Label", fontsize=12)
-# X轴标签旋转，防止中文重叠
+# Rotate X-axis labels to prevent overlap
 plt.xticks(rotation=45, ha='right')
 plt.yticks(rotation=0)
 plt.tight_layout()
 plt.show()
 
-# --- ROC 曲线 (按数字前缀分组 1-9) ---
+# --- ROC Curves (Grouped by numerical prefix 1-9) ---
 grouped_indices = {i: [] for i in range(1, 10)} 
 
 for idx, name in enumerate(target_names):
-    # 提取中文名称中的数字前缀 "1."
+    # Extract numerical prefix "1." from the label name
     match = re.match(r"(\d+)\.", str(name))
     if match:
         group_num = int(match.group(1))
@@ -431,7 +431,7 @@ for idx, name in enumerate(target_names):
     else:
         grouped_indices[9].append(idx)
 
-# 循环绘图
+# Loop for plotting
 for group_id in range(1, 10):
     indices = grouped_indices[group_id]
     if not indices:
@@ -447,7 +447,7 @@ for group_id in range(1, 10):
         fpr, tpr, _ = metrics.roc_curve(y_true_all == i, y_score_all[:, i])
         roc_auc_val = metrics.auc(fpr, tpr)
         
-        # 这里的 label_name 是中文
+        # Here label_name is the raw label
         label_name = target_names[i]
         plt.plot(fpr, tpr, lw=2,
                  label='{0} (area={1:0.4f})'.format(label_name, roc_auc_val))
@@ -460,9 +460,8 @@ for group_id in range(1, 10):
         plt.xlabel('False Positive Rate')
         plt.ylabel('True Positive Rate')
         plt.title(f'ROC Curves - Group {group_id}')
-        plt.legend(loc="lower right") # 图例中会显示中文
+        plt.legend(loc="lower right") # Legend will display labels
         plt.tight_layout()
         plt.show()
     else:
         plt.close()
-
