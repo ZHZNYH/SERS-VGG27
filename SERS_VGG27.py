@@ -242,7 +242,7 @@ class SERS_VGG27(nn.Module):
         self.Mpo6 = nn.MaxPool1d(kernel_size=2, stride=2)
         
         self.classifier = nn.Sequential(
-            nn.Linear(3072, 4096),
+            nn.Linear(1024, 4096),
             nn.ReLU(True),
             nn.Dropout(p=0.2),
             nn.Linear(4096, 4096),
@@ -455,4 +455,5 @@ for group_id in range(1, 10):
         plt.show()
     else:
         plt.close()
+
 
