@@ -172,14 +172,14 @@ class SERS_VGG27(nn.Module):
     def __init__(self, num_classes):
         super(SERS_VGG27, self).__init__()
         # Layer 1
-        self.conv1 = nn.Conv1d(3, 64, kernel_size=1, padding=1)
+        self.conv1 = nn.Conv1d(3, 64, kernel_size=1, padding=0)
         self.Bat1 = nn.BatchNorm1d(64)
         self.relu = nn.ReLU(True)
         # Layer 2
         self.conv2 = nn.Conv1d(64, 64, kernel_size=3, padding=1)
         self.Bat2 = nn.BatchNorm1d(64)
         # Layer 3
-        self.conv3 = nn.Conv1d(64, 64, kernel_size=1, padding=1)
+        self.conv3 = nn.Conv1d(64, 64, kernel_size=1, padding=0)
         self.Bat3 = nn.BatchNorm1d(64)
         # Layer 4
         self.conv4 = nn.Conv1d(64, 64, kernel_size=3, padding=1)
@@ -187,62 +187,60 @@ class SERS_VGG27(nn.Module):
         self.Mpol = nn.MaxPool1d(kernel_size=2, stride=2)
         
         # Layer 5-8
-        self.conv5 = nn.Conv1d(64, 128, kernel_size=1, padding=1)
+        self.conv5 = nn.Conv1d(64, 128, kernel_size=1, padding=0)
         self.Bat5 = nn.BatchNorm1d(128)
         self.conv6 = nn.Conv1d(128, 128, kernel_size=3, padding=1)
         self.Bat6 = nn.BatchNorm1d(128)
-        self.conv7 = nn.Conv1d(128, 128, kernel_size=1, padding=1)
+        self.conv7 = nn.Conv1d(128, 128, kernel_size=1, padding=0)
         self.Bat7 = nn.BatchNorm1d(128)
         self.conv8 = nn.Conv1d(128, 128, kernel_size=3, padding=1)
         self.Bat8 = nn.BatchNorm1d(128)
         self.Mpo2 = nn.MaxPool1d(kernel_size=2, stride=2)
         
         # Layer 9-12
-        self.conv9 = nn.Conv1d(128, 256, kernel_size=1, padding=1)
+        self.conv9 = nn.Conv1d(128, 256, kernel_size=1, padding=0)
         self.Bat9 = nn.BatchNorm1d(256)
         self.conv10 = nn.Conv1d(256, 256, kernel_size=3, padding=1)
         self.Bat10 = nn.BatchNorm1d(256)
-        self.conv11 = nn.Conv1d(256, 256, kernel_size=1, padding=1)
+        self.conv11 = nn.Conv1d(256, 256, kernel_size=1, padding=0)
         self.Bat11 = nn.BatchNorm1d(256)
         self.conv12 = nn.Conv1d(256, 256, kernel_size=3, padding=1)
         self.Bat12 = nn.BatchNorm1d(256)
         self.Mpo3 = nn.MaxPool1d(kernel_size=2, stride=2)
         
         # Layer 13-16
-        self.conv13 = nn.Conv1d(256, 256, kernel_size=1, padding=1)
+        self.conv13 = nn.Conv1d(256, 256, kernel_size=1, padding=0)
         self.Bat13 = nn.BatchNorm1d(256)
         self.conv14 = nn.Conv1d(256, 256, kernel_size=3, padding=1)
         self.Bat14 = nn.BatchNorm1d(256)
-        self.conv15 = nn.Conv1d(256, 256, kernel_size=1, padding=1)
+        self.conv15 = nn.Conv1d(256, 256, kernel_size=1, padding=0)
         self.Bat15 = nn.BatchNorm1d(256)
         self.conv16 = nn.Conv1d(256, 256, kernel_size=3, padding=1)
         self.Bat16 = nn.BatchNorm1d(256)
         self.Mpo4 = nn.MaxPool1d(kernel_size=2, stride=2)
         
         # Layer 17-20
-        self.conv17 = nn.Conv1d(256, 512, kernel_size=1, padding=1)
+        self.conv17 = nn.Conv1d(256, 512, kernel_size=1, padding=0)
         self.Bat17 = nn.BatchNorm1d(512)
         self.conv18 = nn.Conv1d(512, 512, kernel_size=3, padding=1)
         self.Bat18 = nn.BatchNorm1d(512)
-        self.conv19 = nn.Conv1d(512, 512, kernel_size=1, padding=1)
+        self.conv19 = nn.Conv1d(512, 512, kernel_size=1, padding=0)
         self.Bat19 = nn.BatchNorm1d(512)
         self.conv20 = nn.Conv1d(512, 512, kernel_size=3, padding=1)
         self.Bat20 = nn.BatchNorm1d(512)
         self.Mpo5 = nn.MaxPool1d(kernel_size=2, stride=2)
         
         # Layer 21-24
-        self.conv21 = nn.Conv1d(512, 512, kernel_size=1, padding=1)
+        self.conv21 = nn.Conv1d(512, 512, kernel_size=1, padding=0)
         self.Bat21 = nn.BatchNorm1d(512)
         self.conv22 = nn.Conv1d(512, 512, kernel_size=3, padding=1)
         self.Bat22 = nn.BatchNorm1d(512)
-        self.conv23 = nn.Conv1d(512, 512, kernel_size=1, padding=1)
+        self.conv23 = nn.Conv1d(512, 512, kernel_size=1, padding=0)
         self.Bat23 = nn.BatchNorm1d(512)
         self.conv24 = nn.Conv1d(512, 512, kernel_size=3, padding=1)
         self.Bat24 = nn.BatchNorm1d(512)
         self.Mpo6 = nn.MaxPool1d(kernel_size=2, stride=2)
         
-        self.pol2 = nn.AvgPool1d(kernel_size=1, stride=1)
-
         self.classifier = nn.Sequential(
             nn.Linear(3072, 4096),
             nn.ReLU(True),
@@ -284,7 +282,6 @@ class SERS_VGG27(nn.Module):
         out = self.relu(self.Bat23(self.conv23(out)))
         out = self.Mpo6(self.relu(self.Bat24(self.conv24(out))))
         
-        out = self.pol2(out)
         out = out.view(out.size(0), -1)
         out = self.classifier(out)
         return out
@@ -458,3 +455,4 @@ for group_id in range(1, 10):
         plt.show()
     else:
         plt.close()
+
