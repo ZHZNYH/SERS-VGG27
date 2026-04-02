@@ -2,5 +2,4 @@ Building on the VGG19 framework, we develop SERS-VGG27 - a spectrally adapted ne
 Source of the original SERS dataset: https://pubs.acs.org/doi/10.1021/acssensors.4c01205
 
 Steps to run code:
-1. Run the "Merge datasets.py" file to obtain the cleaned Raman dataset.
-2. Run the "SERS_VGG27.py" file. 
+1. Run the "SERS_VGG27.py" file. 
